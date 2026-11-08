@@ -1,0 +1,40 @@
+{
+  "entities": {
+    "SyncState": {
+      "title": "SyncState",
+      "description": "Synchronized ExamFlow live platform state across devices including students, subjects, exams, questions, attempts, violations, certificates, and settings",
+      "type": "object",
+      "properties": {
+        "updatedAt": { "type": "number" },
+        "payloadJson": { "type": "string", "maxLength": 950000 }
+      },
+      "required": ["updatedAt", "payloadJson"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile containing role, email, and metadata",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 120 },
+        "role": { "type": "string", "enum": ["admin", "student"] },
+        "department": { "type": "string", "maxLength": 100 },
+        "year": { "type": "string", "maxLength": 20 },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "email", "role", "isActive"]
+    }
+  },
+  "firestore": {
+    "/examflow_sync/{docId}": {
+      "schema": "SyncState",
+      "description": "Synchronized ExamFlow live state document for cross-device student login and exam management"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles for admins and students"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isValidSyncState(data) {
+      return data.keys().hasAll(['updatedAt', 'payloadJson']) &&
+        data.keys().hasOnly(['updatedAt', 'payloadJson']) &&
+        data.updatedAt is number &&
+        data.payloadJson is string &&
+        data.payloadJson.size() >= 2 &&
+        data.payloadJson.size() <= 950000;
+    }
+
+    // Cross-device ExamFlow state synchronization (supports Student ID login across devices without requiring Google OAuth)
+    match /examflow_sync/{docId} {
+      allow get: if isValidId(docId);
+      allow create: if isValidId(docId) && isValidSyncState(incoming());
+      allow update: if isValidId(docId) && isValidSyncState(incoming());
+      allow delete: if false;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId);
+      allow create, update: if isValidId(userId) &&
+        incoming().keys().hasAll(['uid', 'name', 'email', 'role', 'isActive']) &&
+        incoming().uid is string && incoming().uid.size() <= 128 &&
+        incoming().name is string && incoming().name.size() <= 100 &&
+        incoming().email is string && incoming().email.size() <= 120 &&
+        incoming().role in ['admin', 'student'] &&
+        incoming().isActive is bool;
+      allow delete: if false;
+    }
+  }
+}

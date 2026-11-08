@@ -1,0 +1,6 @@
+{
+  "name": "ExamFlow – Online Examination Management Platform",
+  "description": "Enterprise-grade online examination platform with timed assessments, MCQ, descriptive & coding questions, isolated sandbox execution, and proctoring violation monitoring.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

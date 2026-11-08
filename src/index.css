@@ -1,0 +1,264 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ==========================================================================
+   AMETHYST & COBALT (PURPLE & ROYAL BLUE) PERMANENT UI THEME ACROSS ALL PAGES
+   ========================================================================== */
+:root {
+  --theme-bg: #07081C;
+  --theme-sidebar: #090B24;
+  --theme-header: rgba(9, 11, 36, 0.9);
+  --theme-card: #0E1132;
+  --theme-card-grad-from: #131744;
+  --theme-card-grad-to: #0C0F2D;
+  --theme-hero-from: #0B0E2E;
+  --theme-hero-via: #131147;
+  --theme-hero-to: #1E145E;
+  --theme-surface: #141946;
+  --theme-surface-hover: #1C225C;
+  --theme-input: #12163E;
+  --theme-border: rgba(124, 58, 237, 0.32);
+  --theme-divider: rgba(99, 102, 241, 0.22);
+  --theme-text-main: #FFFFFF;
+  --theme-text-sec: #E2E8F0;
+  --theme-text-muted: #CBD5E1;
+  --theme-accent: #7C3AED;
+  --theme-accent-2: #4F46E5;
+  --theme-accent-text: #C4B5FD;
+  --theme-accent-soft: rgba(124, 58, 237, 0.18);
+  --theme-accent-border: rgba(139, 92, 246, 0.38);
+  --theme-btn-shadow: rgba(124, 58, 237, 0.45);
+  --theme-card-shadow: rgba(3, 4, 18, 0.75);
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background-color: #07081C;
+    color: #F8FAFC;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+body {
+  background-color: #07081C;
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(124, 58, 237, 0.18) 0%, transparent 40%),
+    radial-gradient(circle at 85% 18%, rgba(56, 189, 248, 0.12) 0%, transparent 38%),
+    radial-gradient(circle at 50% 90%, rgba(99, 102, 241, 0.14) 0%, transparent 45%);
+  color: #F8FAFC;
+}
+
+.bg-\[\#F3F6FD\] {
+  background-color: #07081C !important;
+  color: #F8FAFC !important;
+}
+
+/* Primary Cards & Containers (exclude print certificate sheet) */
+.bg-white:not(.certificate-sheet) {
+  background-color: #0E1132 !important;
+  color: #F8FAFC !important;
+  border-color: rgba(124, 58, 237, 0.28) !important;
+  box-shadow: 0 12px 32px -10px rgba(3, 4, 18, 0.75);
+}
+
+/* Elevated Secondary Surfaces */
+.bg-slate-50,
+.bg-slate-50\/50,
+.bg-slate-50\/60,
+.bg-slate-50\/70,
+.bg-slate-50\/80,
+.bg-slate-100,
+.bg-slate-100\/80,
+.bg-slate-200,
+.bg-slate-300 {
+  background-color: #141946 !important;
+  color: #E2E8F0 !important;
+}
+
+.hover\:bg-slate-50:hover,
+.hover\:bg-slate-50\/70:hover,
+.hover\:bg-slate-50\/80:hover,
+.hover\:bg-slate-100:hover,
+.hover\:bg-slate-200:hover {
+  background-color: #1C225C !important;
+}
+
+/* Tinted Soft Callout Surfaces */
+.bg-blue-50,
+.bg-blue-50\/40,
+.bg-blue-50\/50,
+.bg-blue-50\/60,
+.bg-blue-50\/70,
+.bg-blue-50\/80,
+.bg-blue-50\/90,
+.bg-blue-100,
+.bg-indigo-50,
+.bg-indigo-50\/60,
+.bg-indigo-100,
+.bg-purple-50,
+.bg-purple-50\/80,
+.bg-purple-100,
+.bg-sky-50 {
+  background-color: rgba(124, 58, 237, 0.18) !important;
+  border-color: rgba(139, 92, 246, 0.38) !important;
+  color: #E9D5FF !important;
+}
+
+.bg-emerald-50,
+.bg-emerald-50\/40,
+.bg-emerald-50\/70,
+.bg-emerald-50\/80,
+.bg-emerald-50\/90,
+.bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.16) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  color: #A7F3D0 !important;
+}
+
+.bg-amber-50,
+.bg-amber-50\/50,
+.bg-amber-50\/60,
+.bg-amber-50\/70,
+.bg-amber-50\/80,
+.bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.16) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  color: #FDE68A !important;
+}
+
+.bg-red-50,
+.bg-red-50\/50,
+.bg-red-50\/70,
+.bg-red-50\/80,
+.bg-red-100,
+.bg-rose-50,
+.bg-rose-100 {
+  background-color: rgba(244, 63, 94, 0.16) !important;
+  border-color: rgba(244, 63, 94, 0.4) !important;
+  color: #FECDD3 !important;
+}
+
+/* Typography Hierarchy — High Contrast on Amethyst & Cobalt */
+.text-slate-900,
+.text-slate-800,
+.text-\[\#0A194E\],
+.text-\[\#09153E\],
+.text-\[\#0A1D56\],
+.text-blue-950,
+.text-purple-950,
+.text-emerald-950,
+.text-amber-950,
+.text-red-950 {
+  color: #FFFFFF !important;
+}
+
+.text-slate-700,
+.text-slate-600 {
+  color: #E2E8F0 !important;
+}
+
+.text-slate-500,
+.text-slate-400 {
+  color: #CBD5E1 !important;
+}
+
+/* Vibrant Accents */
+.text-blue-600,
+.text-blue-700,
+.text-blue-800,
+.text-blue-900,
+.text-indigo-600,
+.text-indigo-700,
+.text-indigo-800,
+.text-purple-600,
+.text-purple-700,
+.text-purple-800 {
+  color: #C4B5FD !important;
+}
+
+.text-emerald-600,
+.text-emerald-700,
+.text-emerald-800,
+.text-emerald-900 {
+  color: #6EE7B7 !important;
+}
+
+.text-amber-600,
+.text-amber-700,
+.text-amber-800,
+.text-amber-900 {
+  color: #FCD34D !important;
+}
+
+.text-red-600,
+.text-red-700,
+.text-red-800,
+.text-red-900,
+.text-rose-600,
+.text-rose-700 {
+  color: #FDA4AF !important;
+}
+
+/* Primary Action Buttons -> Amethyst & Cobalt Gradient */
+.bg-blue-600 {
+  background-image: linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%) !important;
+  background-color: #7C3AED !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 20px -3px rgba(124, 58, 237, 0.45);
+}
+
+.hover\:bg-blue-700:hover {
+  background-image: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%) !important;
+  background-color: #6D28D9 !important;
+}
+
+/* Structural Borders & Dividers */
+.border-slate-200,
+.border-slate-200\/80,
+.border-slate-200\/70,
+.border-slate-200\/90,
+.border-slate-100,
+.border-slate-300,
+.border-blue-100,
+.border-blue-200,
+.border-blue-200\/70,
+.border-blue-300 {
+  border-color: rgba(124, 58, 237, 0.32) !important;
+}
+
+.divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+.divide-slate-200\/80 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(99, 102, 241, 0.22) !important;
+}
+
+/* Inputs, Selects & Textareas */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  background-color: #12163E !important;
+  color: #FFFFFF !important;
+  border-color: rgba(124, 58, 237, 0.38) !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"])::placeholder,
+textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
+select:focus,
+textarea:focus {
+  border-color: #A855F7 !important;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.25) !important;
+}

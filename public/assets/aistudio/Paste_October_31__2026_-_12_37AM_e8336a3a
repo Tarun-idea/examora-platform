@@ -1,0 +1,840 @@
+# ExamFlow – Online Examination Management System
+
+[AI Exams Management Dashboard by Anuwar Hossen on Dribbble](https://images.openai.com/static-rsc-4/OsO00lxDERXyu_tI0-IEMO5E76_ciCWPvPdOMiN-cPsHryTfT-YT92JECWwFu9-Hn0zvtvi1H1lscq1HsefwIMGzNMBbHco4id5AFDLIjwG-IQYAZs8yuIO8e3PpX5p_04OtJu5asB0C2zpm4jplsN_C-BaDKisJfXMW2sWD1Ec?purpose=inline)
+
+[dribbble.com](https://dribbble.com/shots/26044528-AI-Exams-Management-Dashboard?utm_source=chatgpt.com)
+
+Project Name: ExamFlow\
+Project Type: Full-Stack Online Examination Management Website\
+Purpose: To create a secure, intelligent, flexible online examination platform for educational institutions, colleges, schools, and training centres.
+
+## 1. Project overview
+
+ExamFlow is a web-based examination management system designed to conduct online examinations with multiple question formats, automatic evaluation, coding assessments, and examination monitoring.
+
+The platform has two main user roles:
+
+- Admin: Creates examinations, manages subjects, enters questions, assigns students, configures examination settings, evaluates answers, and publishes results.
+- Student: Logs in, attends assigned examinations, answers questions, writes and executes programs, and views published results.
+
+The system should provide a professional, responsive, user-friendly interface that works on desktop computers, laptops, and tablets.
+
+## 2. Website design and appearance
+
+[Classroom Management designs, themes, templates and downloadable graphic elements on Dribbble](https://images.openai.com/static-rsc-4/IQMfuX_Pf9CGyOK54DXKhJN9emrRzMeWqwisrO6B3QiFE0aTlTcRGBifE1fT5nJTnUwfd84jOSd9-DSE72n451i0d_t1QOsHu1qZzqBIT0lLzmyM6EWYL-_AMjG5Vc9yxZRiiPMpmc2xoys9urtqo7HcgOlwYNw9E8tbcH-mt7w?purpose=inline)
+
+[Student Exam Dashboard by Srinivas Veeraboina on Dribbble](https://images.openai.com/static-rsc-4/KWiTDk8cnYxtzEIKXAE3JTufA-u33qdKP2ZU6Zc7M4hqreNclS1uvEBheADG4lf5HNVkrNlt5J73ohH347-qtSQr2wxcGwDZRNjImLIjGSJ45sr_YKn7YCxvtcwDqLoFVUjhG6mqfKkN9ni_YUc90X6LhRDa_mcxHk0RXMNmKkc?purpose=inline)
+
+[EduPro - E-Learning & Exam Platform UI by Aashabul Imam on Dribbble](https://images.openai.com/static-rsc-4/lOzJYhaCCyEz6mUj2zyo-B1qPMSb3ulxpIxM9VmqmJmmMMHDSlpjSNnRzwj-i5jmWM2rpGfUdlXjTkkDz-M7uG4oUnr_1JOUt5mSwrWYDX6tFWyhPA7KFQgNyTrnPMwYeoEXHcC64RcxqPv3gEbLtDUUXSTJps3L97JMoFGe3Bk?purpose=inline)
+
+11
+
+The website should have a professional educational technology design.
+
+Design requirements:
+
+- Modern and clean interface.
+- Responsive layout.
+- Professional typography.
+- Consistent colour scheme.
+- Smooth transitions and animations.
+- Clear navigation and dashboards.
+- Light and dark mode support.
+- Attractive cards, tables, buttons, charts, and status indicators.
+
+Suggested visual identity:
+
+| Element          | Design             |
+| ---------------- | ------------------ |
+| Primary colour   | Deep navy blue     |
+| Secondary colour | Royal blue         |
+| Background       | White / light grey |
+| Success          | Green              |
+| Warning          | Orange             |
+| Error            | Red                |
+| Typography       | Inter or similar   |
+
+## 3. Authentication system
+
+The website must provide separate login experiences for Admin and Student.
+
+### Admin login
+
+- Admin email or username.
+- Password.
+- Secure authentication.
+- Admin dashboard access.
+- Logout functionality.
+
+### Student login
+
+- Student ID or registered email.
+- Password.
+- Secure authentication.
+- Student dashboard access.
+- Logout functionality.
+
+Security requirements:
+
+- Password hashing using bcrypt or Argon2.
+- Session-based authentication.
+- Role-based access control.
+- Login validation.
+- Login rate limiting.
+- Protected routes.
+- Secure password reset process.
+
+Students must never be able to access administrator functionality.
+
+## 4. Admin dashboard
+
+[AI Exams Management Dashboard by Anuwar Hossen on Dribbble](https://images.openai.com/static-rsc-4/FJ-uXG1reW6pRYoyQvvcn2bUXAxGMeeVSzGAF4O0RkzO8VSGgeUrTuTeozvPY3M_HoU_lP5AGGJBPRIdA8OvpQWCq02KzFvxgHZ9Jo05vIU8cEiD0Kjl-0Z9iu7PBpYqgHpHQubROUwc7IP9q17iI7r0s1owC44OXoZsBG33D_s?purpose=inline)
+
+[dribbble.com](https://dribbble.com/shots/26044528-AI-Exams-Management-Dashboard?utm_source=chatgpt.com)
+
+The admin dashboard is the central management area.
+
+It should display:
+
+- Total registered students.
+- Total subjects.
+- Total examinations.
+- Upcoming examinations.
+- Completed examinations.
+- Pending evaluations.
+- Published results.
+- Recent student examination activity.
+
+### Admin navigation
+
+1. Dashboard
+2. Student Management
+3. Subject Management
+4. Examination Management
+5. Question Bank
+6. Exam Assignments
+7. Student Attempts
+8. Evaluation
+9. Results
+10. Violation Logs
+11. Settings
+12. Logout
+
+## 5. Subject management
+
+The admin can create and manage multiple subjects.
+
+Each subject should contain:
+
+- Subject name.
+- Subject code.
+- Subject description.
+- Subject status.
+- Creation date.
+
+Admin operations:
+
+- Add subject.
+- Edit subject.
+- Delete subject, subject to existing exam dependencies.
+- View subject details.
+- Assign examinations to subjects.
+
+Examples:
+
+- Python Programming
+- Java Programming
+- Database Management Systems
+- Computer Networks
+- Operating Systems
+- Mathematics
+
+Important: Examination duration belongs to each examination, not to the subject.
+
+## 6. Student management
+
+The admin can manage student accounts.
+
+Features:
+
+- Add individual students.
+- Register students in bulk.
+- Edit student information.
+- Activate or deactivate student accounts.
+- Search and filter students.
+- View student examination history.
+- Assign students to examinations.
+
+Student information:
+
+| Field          | Description                |
+| -------------- | -------------------------- |
+| Student ID     | Unique registration number |
+| Full name      | Student name               |
+| Email          | Registered email           |
+| Department     | Student department         |
+| Year           | Academic year              |
+| Account status | Active / Inactive          |
+
+## 7. Examination management
+
+[Drona Sutra | Coaching Management Software & Institute ERP India](https://images.openai.com/static-rsc-4/SHTZDgbMHfq0cbHNsWnRKoHZxslA3af3DoPMVkNII7xROUnuX59oHz9vNvh8FTgybz59i6sb_7Pz-ztXAAWiXtSO4pZ1oyrGldrQg_sOdDFjH-w9whQpa8vb3fpeoEpMyopFyas4wcSniC-_vqfBgbeJSBOhh0vr0zALucQ2mmQ?purpose=inline)
+
+[dronasutra.com](https://dronasutra.com/?utm_source=chatgpt.com)
+
+The admin can create examinations and control their complete lifecycle.
+
+### Examination configuration
+
+Each examination should contain:
+
+- Examination title.
+- Subject.
+- Description.
+- Examination date.
+- Starting time.
+- Duration in minutes.
+- Total marks.
+- Passing marks.
+- Number of questions.
+- Student assignments.
+- Examination instructions.
+- Examination status.
+
+### Admin-controlled examination duration
+
+The admin sets the duration independently for each examination.
+
+For example:
+
+| Examination         | Duration    |
+| ------------------- | ----------- |
+| Python Programming  | 90 minutes  |
+| Java Programming    | 120 minutes |
+| Mathematics         | 180 minutes |
+| Database Management | 60 minutes  |
+
+The system must calculate the deadline using the scheduled start time and configured duration.
+
+A student joining late receives only the remaining time.
+
+### Examination statuses
+
+- Draft
+- Scheduled
+- Published
+- Ongoing
+- Completed
+- Results Published
+
+## 8. Question management system
+
+[ExaLab - Online Exam Platform by ViserLab | CodeCanyon](https://images.openai.com/static-rsc-4/SryEMXqmdJztOfo-6HVPWRNCPRwcRCchQSho3oTqvKLi_l-ldg0soVqnFXYZkDB4E4o1BHXXnOG0ImVJDIJKgJAbqo67lSEzSnerTQQsngqxq1D-QNqJVgrwJh-imHGVKrtqPKDP75hGVTAG58YrrPx9oNJJNYC5KOlYry4M_W0?purpose=inline)
+
+[codecanyon.net](https://codecanyon.net/item/exalab-online-exam-platform/32353994?utm_source=chatgpt.com)
+
+The admin is responsible for entering and managing all examination questions.
+
+The question bank supports three question types.
+
+### A. Multiple Choice Questions (MCQ)
+
+Each MCQ contains:
+
+- Question text.
+- Four or more answer options.
+- Correct answer.
+- Marks.
+- Optional explanation.
+- Difficulty level.
+
+Example:
+
+Question: Which keyword is used to define a function in Python?
+
+- A. function
+- B. def
+- C. define
+- D. func
+
+Correct answer: B. `def`
+
+The system automatically evaluates MCQs.
+
+### B. Descriptive questions
+
+Each descriptive question contains:
+
+- Question text.
+- Marks.
+- Optional instructions.
+- Answer length guidance.
+- Optional attachments or images.
+
+Students receive a text editor to write their answers.
+
+Admin evaluates descriptive answers manually and awards marks.
+
+### C. Programming questions
+
+[Answer Coding Questions](https://images.openai.com/static-rsc-4/NqRPcJvfj1d_OVgw2LWEC1i7J_-EId64jbwcuN1UDL69uy33xLyW81PezUOiajWbCFW0BP42ehZmaRKGSPgfV1GQFowh1wDXllVJdOpeb4Y3P3VckP9SIuM0_x0ihx60z289uB00LhbqPlIbzWI32IimmjSmU2fNyXnijfSX4YE?purpose=inline)
+
+[candidatesupport.hackerrank.com](https://candidatesupport.hackerrank.com/articles/9623161883-answer-coding-questions?utm_source=chatgpt.com)
+
+This module allows students to write programs inside the examination website.
+
+The programming question contains:
+
+- Problem statement.
+- Programming language.
+- Input format.
+- Output format.
+- Constraints.
+- Sample input.
+- Sample output.
+- Test cases.
+- Marks.
+
+Supported languages can include:
+
+- Python
+- C
+- C++
+- Java
+- JavaScript
+
+The admin should be able to enter sample and hidden test cases.
+
+Example programming question:
+
+Write a program to find the sum of two integers.
+
+Sample input:
+
+```
+10 20
+```
+
+Expected output:
+
+```
+30
+```
+
+### Coding editor features
+
+- Syntax highlighting.
+- Code indentation.
+- Line numbers.
+- Language selection.
+- Run button.
+- Reset code.
+- Sample test-case output.
+- Execution status.
+- Compilation error display.
+- Test-case results.
+
+### Coding evaluation
+
+When the student submits code:
+
+1. The backend sends the code to an isolated execution service.
+2. The code is compiled or interpreted.
+3. Test cases are executed.
+4. Actual output is compared with expected output.
+5. Marks are calculated according to passed test cases or configured grading rules.
+
+For security, student programs must execute in a sandbox with CPU, memory, execution-time, filesystem, and network restrictions. They must not execute directly inside the main Express application.
+
+## 9. Random question display system
+
+Important requirement
+
+All questions entered by the admin should be randomly displayed to students during the examination.
+
+### How it works
+
+1. Admin enters the examination questions.
+2. Admin publishes the examination.
+3. Student starts the examination.
+4. The backend creates that student's attempt.
+5. Questions are shuffled for that student.
+6. The student's randomized question order is saved.
+7. The same order is maintained if the student refreshes the page.
+
+Example:
+
+Student A
+
+Random order
+
+1. Question 3
+2. Question 1
+3. Question 5
+4. Question 2
+5. Question 4
+
+Student B
+
+Random order
+
+1. Question 2
+2. Question 5
+3. Question 1
+4. Question 4
+5. Question 3
+
+Every student receives the same examination question set, but the order is randomized independently.
+
+The random order must remain fixed throughout that student's examination attempt.
+
+## 10. Student dashboard
+
+[Student Exam Dashboard by Srinivas Veeraboina on Muzli](https://images.openai.com/static-rsc-4/ku9gx0phzrOBd62T5dj5xcoW-EZ20UEn6EUaDbTWpZrbzLNYV1IXIFvjV0j7d_FJbMlYKFz421P2UXUIN99zEzmhIm9i82Dc2yEMCw979SRWPrGAaK9b6CvvkVorym-rQa920K3cNstsXV71IC_gtTiwG6WLg-qmw6Ab0l9rw_s?purpose=inline)
+
+[me.muz.li](https://me.muz.li/srinivasveeraboina/student-exam-dashboard-2?utm_source=chatgpt.com)
+
+After login, the student sees their personal dashboard.
+
+Dashboard information:
+
+- Student profile.
+- Assigned examinations.
+- Upcoming examinations.
+- Available examinations.
+- Completed examinations.
+- Examination history.
+- Published results.
+- Notifications.
+
+### Student navigation
+
+1. Dashboard
+2. My Examinations
+3. Upcoming Exams
+4. Examination History
+5. Results
+6. Profile
+7. Logout
+
+Students should only see examinations assigned to them.
+
+## 11. Student examination interface
+
+[E-Sınav Sistemi](https://images.openai.com/static-rsc-4/csyJz1hgZxjtBdCZxDWQb1OgOjHujP9scfCHDAp0KwrKo75Zhmzi4EwRjO0x-LyI65ZImazg1vxvFUkef8kqekbB7daDQ5XI86GT-Fux0UFroOQ8LY6SOORg9qsR-HCQZZeFojVGRa4Oe94w4p0Y7LvYEwxZpdrfzb9RREdrq6M?purpose=inline)
+
+[bidb.itu.edu.tr](https://bidb.itu.edu.tr/hizmetler/yazilim-hizmetleri/esinav?utm_source=chatgpt.com)
+
+This is the most important interface of ExamFlow.
+
+When a student clicks Start Examination, the system should:
+
+1. Verify the examination schedule.
+2. Verify student assignment.
+3. Check that the student has not already submitted.
+4. Create or resume the attempt.
+5. Request browser full-screen mode.
+6. Start the server-controlled countdown timer.
+7. Display randomized questions.
+
+### Examination screen layout
+
+The interface should include:
+
+| Area             | Function                          |
+| ---------------- | --------------------------------- |
+| Header           | Exam title and subject            |
+| Timer            | Remaining time                    |
+| Question panel   | Current question                  |
+| Navigation panel | Question numbers                  |
+| Answer area      | MCQ, descriptive or coding editor |
+| Bottom controls  | Previous, Next and Submit         |
+
+### Question navigation
+
+- Previous question.
+- Next question.
+- Mark for review.
+- Answered question indicator.
+- Unanswered question indicator.
+- Current question indicator.
+
+### Autosave
+
+Student answers should automatically save to the backend.
+
+This prevents data loss if:
+
+- The page accidentally refreshes.
+- The browser crashes.
+- The internet connection temporarily disconnects.
+
+When the student returns, the system should restore the saved answers and remaining time.
+
+## 12. Full-screen and examination monitoring
+
+[AI-powered EMS certification exams with Synap: Faster, smarter testing for paramedics. | Customer Stories | Synap](https://images.openai.com/static-rsc-4/s6Oy6eq8GnMCHDYd27H_Ezne4iCeHWJrFTVA_dYzBTkfmYillnCiCTgeAmX1iaSs8yj61bpBd0nc0zl3B9sjemNZAysrXpg407350rP85djxt5IJo-Ahcb6Fl0i3b4p0MN_yBoFQBcUqj_l9kiwH9IaVfHtwga7pbV2X8mPjVGc?purpose=inline)
+
+[synap.ac](https://synap.ac/customers/effective-exam-questions-for-paramedics-and-ems/?utm_source=chatgpt.com)
+
+The examination should request full-screen mode when the student starts.
+
+### Monitoring features
+
+- Detect full-screen exit.
+- Detect tab switching.
+- Detect when the browser window loses focus.
+- Record violation timestamps.
+- Display warnings.
+- Store violation history.
+- Display violation reports to the admin.
+
+### Example warning
+
+Examination warning
+
+You have left the examination screen. Please return to full-screen mode.
+
+This event has been recorded.
+
+### Admin monitoring
+
+The admin can review:
+
+- Student name and ID.
+- Examination name.
+- Number of tab switches.
+- Number of full-screen exits.
+- Violation timestamps.
+- Attempt status.
+
+Browser limitation: A normal website cannot completely prevent tab switching, operating-system shortcuts, or access to another device. It can detect many focus changes and full-screen exits, record them, and apply admin-defined consequences. Stronger lockdown requires a dedicated secure examination browser or managed-device solution.
+
+## 13. Timer and automatic submission
+
+The examination timer must be controlled by the server, not just by the student's browser.
+
+Example:
+
+Python Programming Examination
+
+Illustrative examination timer
+
+# 01:24:35
+
+Total duration: 120 minutes
+
+In progress
+
+### Timer rules
+
+- Duration is configured by the admin.
+- The timer starts when the student begins their examination during the permitted schedule.
+- All assigned students share the same scheduled examination deadline.
+- Late students receive only the remaining time.
+- Refreshing cannot reset the timer.
+- Closing the browser cannot stop the server-side deadline.
+- When time expires, the system automatically locks and submits the attempt.
+
+## 14. Evaluation system
+
+ExamFlow should support both automatic and manual evaluation.
+
+| Question type | Evaluation                                                |
+| ------------- | --------------------------------------------------------- |
+| MCQ           | Automatic                                                 |
+| Descriptive   | Manual by admin                                           |
+| Programming   | Automatic through test cases, with optional manual review |
+
+### Admin evaluation dashboard
+
+The admin should be able to:
+
+- View submitted attempts.
+- Review student answers.
+- Evaluate descriptive responses.
+- Inspect programming submissions and test-case results.
+- Award marks.
+- Add feedback.
+- Save and finalize grades.
+
+## 15. Results management
+
+After evaluation, the admin can publish results.
+
+Students can view:
+
+- Examination name.
+- Total marks.
+- Marks obtained.
+- Percentage.
+- Pass or fail status.
+- Question-wise marks, where configured.
+- Descriptive feedback, where released.
+- Publication date.
+
+The result must remain hidden from students until the admin publishes it.
+
+## 16. Database architecture
+
+The platform should use PostgreSQL.
+
+Recommended database tables:
+
+| Table             | Purpose                          |
+| ----------------- | -------------------------------- |
+| users             | Admin and student accounts       |
+| subjects          | Subject information              |
+| exams             | Examination details and duration |
+| exam_assignments  | Students assigned to exams       |
+| questions         | Question bank                    |
+| exam_questions    | Questions linked to exams        |
+| question_options  | MCQ options                      |
+| coding_test_cases | Programming test cases           |
+| attempts          | Student examination attempts     |
+| attempt_questions | Saved randomized question order  |
+| answers           | Student responses                |
+| violations        | Examination monitoring events    |
+| results           | Final marks and results          |
+| sessions          | Login session records            |
+
+The database should use proper relationships, indexes, constraints, and transactions.
+
+## 17. Recommended technology stack
+
+| Layer           | Technology                           |
+| --------------- | ------------------------------------ |
+| AI development  | Replit Agent                         |
+| Frontend        | HTML, CSS, JavaScript                |
+| UI framework    | React (optional migration if useful) |
+| Backend         | Node.js + Express.js                 |
+| Database        | PostgreSQL                           |
+| Authentication  | bcrypt + secure sessions             |
+| Code editor     | Monaco Editor                        |
+| Code execution  | Isolated sandbox execution service   |
+| API             | REST API                             |
+| Deployment      | Replit or suitable production host   |
+| Version control | GitHub                               |
+
+The existing ExamFlow codebase should be inspected before deciding whether to retain its current frontend or migrate to React.
+
+## 18. Security requirements
+
+Security is essential because ExamFlow handles examination data and student information.
+
+Required security features:
+
+- Secure password hashing.
+- Role-based access control.
+- Server-side examination timing.
+- Server-side question and answer authorization.
+- Secure session cookies.
+- CSRF protection where applicable.
+- Request validation.
+- Login rate limiting.
+- Database access restrictions.
+- Protection against SQL injection and XSS.
+- Secure code execution.
+- Hidden test-case protection.
+- Audit logs.
+- Automatic backups.
+- HTTPS.
+- Error logging and monitoring.
+
+## 19. Website pages and complete navigation
+
+Public pages
+
+- Landing page
+- About ExamFlow
+- Features
+- Contact
+- Login
+
+Admin pages
+
+- Admin dashboard
+- Student management
+- Subject management
+- Examination creation
+- Question bank
+- Exam scheduling
+- Student assignments
+- Attempts and submissions
+- Evaluation
+- Results
+- Violation monitoring
+- Settings
+
+Student pages
+
+- Student dashboard
+- My examinations
+- Examination instructions
+- Examination interface
+- Coding editor
+- Examination submission
+- Examination history
+- Results
+- Student profile
+
+## 20. Development and deployment stages
+
+| Phase | Work                                | Expected outcome             |
+| ----- | ----------------------------------- | ---------------------------- |
+| 1     | Project setup and source inspection | Working project foundation   |
+| 2     | Website UI and authentication       | Admin/student dashboards     |
+| 3     | Subjects and question bank          | Admin management             |
+| 4     | Examination scheduling              | Exam configuration           |
+| 5     | Student examination interface       | Working exam experience      |
+| 6     | Randomization and autosave          | Reliable attempts            |
+| 7     | Coding editor and compiler          | Programming assessment       |
+| 8     | Monitoring and timer                | Examination security         |
+| 9     | Evaluation and results              | Complete assessment workflow |
+| 10    | Testing and deployment              | Publicly accessible website  |
+
+## 21. Project abstract
+
+ExamFlow – Online Examination Management System
+
+ExamFlow is a web-based online examination management platform developed to simplify and modernize the examination process in educational institutions. The system provides separate interfaces for administrators and students, allowing administrators to manage subjects, create examinations, configure examination schedules and durations, and enter questions in multiple formats, including multiple-choice, descriptive, and programming questions.
+
+The platform provides randomized question presentation, server-controlled examination timing, automatic answer saving, full-screen monitoring, and tab-switch detection. Programming questions are evaluated through an isolated code execution environment using predefined test cases. Multiple-choice questions are automatically evaluated, while descriptive answers can be manually assessed by administrators. The system generates examination results and publishes them to students after evaluation.
+
+The primary objective of ExamFlow is to provide a reliable, scalable, secure, and user-friendly digital examination environment that reduces manual examination management and supports different assessment methods through a single platform.
+
+## 22. Final instruction for the AI website builder
+
+This is the main development prompt you can provide to Replit Agent or another AI coding platform.
+
+# Build ExamFlow – Full-Stack Online Examination Management Platform
+
+Build a complete, production-oriented web application named **ExamFlow**.
+
+## Main objective
+
+Create a modern online examination platform with separate Admin and Student portals. The system must support MCQ, descriptive, and programming questions with automatic and manual evaluation.
+
+## User roles
+
+1. Admin
+2. Student
+
+Implement secure authentication, role-based authorization, protected routes, and separate dashboards.
+
+## Admin capabilities
+
+- Create, edit, and manage subjects.
+- Register and manage students.
+- Create examinations.
+- Set examination date, start time, duration, marks, passing marks, and instructions.
+- Enter MCQ, descriptive, and programming questions.
+- Add programming test cases, including hidden test cases.
+- Assign examinations to students.
+- Publish and schedule examinations.
+- View student attempts and submissions.
+- Manually grade descriptive answers.
+- Review coding submissions.
+- Publish examination results.
+- View tab-switch and full-screen violation logs.
+
+## Student capabilities
+
+- View assigned examinations.
+- View examination schedules.
+- Start examinations during the permitted period.
+- Answer randomized questions.
+- Answer MCQs.
+- Write descriptive answers.
+- Write and execute programs in an integrated code editor.
+- View sample test-case results.
+- Automatically save answers.
+- Submit examinations.
+- View results after publication.
+
+## Examination requirements
+
+- The admin controls the duration of each examination independently.
+- Do not assign one universal duration to all subjects.
+- Every assigned student shares the same scheduled examination deadline.
+- Late students receive only the remaining time.
+- Use server-authoritative time.
+- Randomize question order separately for each student.
+- Save the randomized question order to the database.
+- Never reshuffle questions after refresh.
+- Automatically submit or lock attempts when time expires.
+- Autosave answers.
+- Prevent students from accessing other students' attempts or answers.
+
+## Question formats
+
+1. MCQ: question text, options, correct answer, marks, optional explanation.
+2. Descriptive: question text, marks, text response, manual grading.
+3. Programming: problem statement, language, code editor, sample inputs and outputs, hidden test cases, execution limits, and automatic evaluation.
+
+## Examination monitoring
+
+- Request browser full-screen mode.
+- Detect full-screen exits.
+- Detect browser tab visibility changes.
+- Detect window focus loss.
+- Record timestamps and student/examination identifiers.
+- Display warnings.
+- Allow administrators to review violation logs.
+- Do not claim that a normal browser website can completely prevent switching tabs or accessing other applications.
+
+## Programming execution security
+
+Use an isolated code-execution service or sandbox. Never execute student code directly in the main application process. Apply execution timeouts, memory limits, filesystem restrictions, process limits, and network restrictions. Keep hidden test cases and expected answers on the server.
+
+## User interface
+
+Create a professional, responsive educational SaaS design with:
+
+- A public landing page.
+- Separate Admin and Student login.
+- Admin dashboard with statistics and charts.
+- Student dashboard with upcoming examinations.
+- Examination management screens.
+- Question creation interface.
+- MCQ, descriptive, and coding question editors.
+- Student examination interface with countdown timer and question navigation.
+- Evaluation and results pages.
+- Violation monitoring dashboard.
+- Light and dark themes.
+
+Use consistent typography, spacing, colours, reusable components, loading indicators, empty states, error messages, and form validation.
+
+## Suggested technology
+
+- Frontend: retain the existing working frontend where practical; use React if a migration is justified.
+- Backend: Node.js and Express.
+- Database: PostgreSQL.
+- Authentication: bcrypt or Argon2 with secure server-side sessions.
+- Code editor: Monaco Editor.
+- Programming evaluation: isolated execution service.
+- API: REST.
+- Version control: GitHub.
+
+## Database
+
+Implement appropriate PostgreSQL tables and relationships for users, subjects, exams, questions, question options, exam assignments, coding test cases, attempts, randomized attempt questions, answers, violations, results, and sessions.
+
+## Development rules
+
+1. Inspect the existing project before modifying it.
+2. Preserve working features.
+3. Do not create fake buttons or non-functional UI.
+4. Implement actual backend and database integration.
+5. Validate inputs on both client and server.
+6. Do not expose secrets in frontend code.
+7. Create database migrations and seed data.
+8. Provide clear setup and deployment instructions.
+9. Test authentication, exam timing, randomization, autosave, submission, grading, and authorization.
+10. Report incomplete features honestly.
+
+## Expected outcome
+
+A fully integrated, tested, deployable ExamFlow online examination platform. Prioritize a working end-to-end application over a static UI prototype.
+
+Our development target: a complete application with real database operations and working examination workflows, rather than a website that only looks finished. We should inspect and integrate the existing source code before asking the AI builder to implement this specification.
