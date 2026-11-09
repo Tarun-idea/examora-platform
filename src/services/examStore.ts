@@ -328,6 +328,19 @@ export function normalizeAndDedupeSections(cohorts?: string[]): string[] {
   return ordered.length > 0 ? ordered : ['A'];
 }
 
+const LEGACY_PURGED_QUESTION_IDS = new Set([
+  'q-1793854326823-a32',
+  'q-1793854397160-tms',
+  'q-1793854455536-6bj',
+  'q-1793861915239-f4y',
+  'q-1793856022167-ruw',
+  'q-1793860253544-gue',
+  'q-1793854611447-2l5',
+  'q-1793861853240-iur',
+  'q-1793854501466-mtu',
+  'q-1793860336057-zmg',
+]);
+
 function mergeArrayById<T extends { id: string; updatedAtMs?: number }>(
   existingArr: T[] = [],
   incomingArr: T[] = [],
@@ -347,7 +360,7 @@ function mergeArrayById<T extends { id: string; updatedAtMs?: number }>(
   const processItem = (item: any) => {
     if (!item || typeof item !== 'object') return;
     const id = String(item.id || '');
-    if (!id || deletedSet.has(id)) return;
+    if (!id || deletedSet.has(id) || LEGACY_PURGED_QUESTION_IDS.has(id)) return;
 
     const normStuId =
       isStudentArray && item.studentId
@@ -477,6 +490,7 @@ export function mergeSharedPlatformState(
   const deletedSet = new Set<string>([
     ...(Array.isArray(current.deletedIds) ? current.deletedIds : []),
     ...(Array.isArray(incoming.deletedIds) ? incoming.deletedIds : []),
+    ...LEGACY_PURGED_QUESTION_IDS,
   ]);
 
   const unmarkIfNewer = (items?: any[], isStudent = false) => {
@@ -601,27 +615,23 @@ export function mergeSharedPlatformState(
       return q;
     });
 
-  // Auto-link students in matching sections to exams and ensure exams with questions are Published
+  // Auto-link students in matching sections to exams while preserving Admin's exam status (Draft vs Published)
   exams = exams.map((ex) => {
     const examQuestions = questions.filter((q) => q.examId === ex.id);
     const qSum = examQuestions.reduce((acc, q) => acc + (Number(q.marks) || 0), 0);
     const nextCohorts =
-      ex.id === 'exam-1793806189274' || examQuestions.length > 0
-        ? [...ALL_SECTIONS]
-        : ex.assignedCohorts;
+      ex.assignedCohorts && ex.assignedCohorts.length > 0
+        ? normalizeAndDedupeSections(ex.assignedCohorts)
+        : [...ALL_SECTIONS];
     const nextAssigned = new Set(ex.assignedStudentIds);
     for (const stu of students) {
       if (nextCohorts.includes(stu.section)) {
         nextAssigned.add(stu.id);
       }
     }
-    const nextStatus: ExamStatus =
-      ex.status === 'Draft' && (examQuestions.length > 0 || ex.id === 'exam-1793806189274')
-        ? 'Published'
-        : ex.status;
     return {
       ...ex,
-      status: nextStatus,
+      status: ex.status || 'Published',
       totalMarks: qSum > 0 ? qSum : ex.totalMarks,
       assignedCohorts: nextCohorts,
       assignedStudentIds: Array.from(nextAssigned),
@@ -833,12 +843,48 @@ class ExamStore {
   private isApplyingRemote = false;
   private syncTimer: ReturnType<typeof setInterval> | null = null;
   private unsubFirestore: (() => void) | null = null;
+  private lastIssuedTs = 0;
 
   constructor() {
     this.state = this.loadFromStorage();
     if (typeof window !== 'undefined') {
       this.initCrossDeviceSync();
     }
+  }
+
+  private nextTimestamp(): number {
+    let maxExisting = Math.max(
+      Date.now(),
+      this.lastIssuedTs,
+      Number(this.state?.adminUpdatedAt || 0),
+      Number(this.state?.settingsUpdatedAt || 0),
+      Number(this.state?.templateUpdatedAt || 0)
+    );
+    if (this.state) {
+      for (const ex of this.state.exams || []) {
+        if (ex.updatedAtMs && ex.updatedAtMs > maxExisting) maxExisting = ex.updatedAtMs;
+      }
+      for (const q of this.state.questions || []) {
+        if (q.updatedAtMs && q.updatedAtMs > maxExisting) maxExisting = q.updatedAtMs;
+      }
+      for (const s of this.state.students || []) {
+        if (s.updatedAtMs && s.updatedAtMs > maxExisting) maxExisting = s.updatedAtMs;
+      }
+      for (const sub of this.state.subjects || []) {
+        if (sub.updatedAtMs && sub.updatedAtMs > maxExisting) maxExisting = sub.updatedAtMs;
+      }
+      for (const att of this.state.attempts || []) {
+        if (att.updatedAtMs && att.updatedAtMs > maxExisting) maxExisting = att.updatedAtMs;
+      }
+      if (this.state.deletedTimestamps) {
+        for (const ts of Object.values(this.state.deletedTimestamps)) {
+          if (Number(ts || 0) > maxExisting) maxExisting = Number(ts || 0);
+        }
+      }
+    }
+    const next = Math.max(Date.now(), maxExisting + 1);
+    this.lastIssuedTs = next;
+    return next;
   }
 
   private getSharedPayload(): Omit<ExamStoreState, 'isAuthenticated' | 'currentUser'> {
@@ -1003,6 +1049,16 @@ class ExamStore {
 
       if (hasRemoteData) {
         this.applyRemoteState(combinedRemote);
+        const firestoreHasLegacyPurged =
+          Array.isArray(firestoreRes?.state?.questions) &&
+          firestoreRes.state.questions.some((q: any) =>
+            LEGACY_PURGED_QUESTION_IDS.has(String(q?.id || ''))
+          );
+        const firestoreAdminTs = Number(firestoreRes?.state?.adminUpdatedAt || 0);
+        const localAdminTs = Number(this.state.adminUpdatedAt || 0);
+        if (firestoreHasLegacyPurged || (localAdminTs > firestoreAdminTs && firestoreAdminTs > 0)) {
+          void pushFirestoreSyncState(this.getSharedPayload()).catch(() => false);
+        }
       } else if (
         this.state.isAuthenticated &&
         this.state.currentUser.role === 'admin'
@@ -1082,11 +1138,11 @@ class ExamStore {
   }
 
   private markAdminModified() {
-    this.state.adminUpdatedAt = Date.now();
+    this.state.adminUpdatedAt = this.nextTimestamp();
   }
 
   private markDeleted(ids: string[]) {
-    const now = Date.now();
+    const now = this.nextTimestamp();
     this.state.adminUpdatedAt = now;
     const next = new Set(this.state.deletedIds || []);
     const nextTimestamps: Record<string, number> = {
@@ -1103,7 +1159,7 @@ class ExamStore {
   }
 
   private unmarkDeleted(ids: string[]) {
-    this.state.adminUpdatedAt = Date.now();
+    this.state.adminUpdatedAt = this.nextTimestamp();
     const removeSet = new Set(ids);
     if (this.state.deletedIds && this.state.deletedIds.length > 0) {
       this.state.deletedIds = this.state.deletedIds.filter(
@@ -1217,13 +1273,14 @@ class ExamStore {
   }
 
   public logActivity(type: ActivityLog['type'], text: string) {
+    const now = this.nextTimestamp();
     const entry: ActivityLog = {
-      id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: `act-${now}-${Math.random().toString(36).slice(2, 6)}`,
       type,
       text,
       timeAgo: 'Just now',
       timestamp: new Date().toISOString(),
-      updatedAtMs: Date.now(),
+      updatedAtMs: now,
     };
     this.state.activities = [entry, ...this.state.activities.slice(0, 19)];
   }
@@ -1542,9 +1599,10 @@ class ExamStore {
     cohorts: string[];
     webcamProctoring: boolean;
   }): Subject {
+    const now = this.nextTimestamp();
     const normalizedCohorts = normalizeAndDedupeSections(data.cohorts);
     const newSub: Subject = {
-      id: `sub-${Date.now()}`,
+      id: `sub-${now}`,
       code: data.code.trim().toUpperCase(),
       name: data.name.trim(),
       description: data.description.trim(),
@@ -1552,7 +1610,7 @@ class ExamStore {
       cohorts: normalizedCohorts.length > 0 ? normalizedCohorts : ['A'],
       webcamProctoring: data.webcamProctoring,
       createdAt: new Date().toISOString().split('T')[0],
-      updatedAtMs: Date.now(),
+      updatedAtMs: now,
     };
     this.unmarkDeleted([newSub.id]);
     this.state.subjects = [newSub, ...this.state.subjects];
@@ -1562,7 +1620,7 @@ class ExamStore {
   }
 
   public updateSubject(id: string, updates: Partial<Subject>) {
-    const now = Date.now();
+    const now = this.nextTimestamp();
     this.state.subjects = this.state.subjects.map((s) =>
       s.id === id
         ? {
@@ -1616,7 +1674,7 @@ class ExamStore {
   }): StudentRecord {
     const cleanStudentId = data.studentId.trim().toUpperCase();
     const deterministicId = makeDeterministicStudentDocId(cleanStudentId);
-    const now = Date.now();
+    const now = this.nextTimestamp();
     this.unmarkDeleted([
       deterministicId,
       `stuid:${cleanStudentId.toLowerCase()}`,
@@ -1700,7 +1758,7 @@ class ExamStore {
   }
 
   public toggleStudentStatus(id: string) {
-    const now = Date.now();
+    const now = this.nextTimestamp();
     this.state.students = this.state.students.map((s) =>
       s.id === id
         ? {
@@ -1731,6 +1789,7 @@ class ExamStore {
   ): StudentRecord | undefined {
     let updatedStudent: StudentRecord | undefined;
     let previousStudentId: string | undefined;
+    const now = this.nextTimestamp();
     this.state.students = this.state.students.map((s) => {
       if (s.id !== id) return s;
       previousStudentId = s.studentId;
@@ -1762,14 +1821,13 @@ class ExamStore {
         section: nextSection,
         password: nextPassword,
         status: nextStatus,
-        updatedAtMs: Date.now(),
+        updatedAtMs: now,
       };
       return updatedStudent;
     });
 
     if (updatedStudent) {
       const stu = updatedStudent;
-      const now = Date.now();
       this.state.students = this.state.students.filter(
         (s) =>
           s.id === stu.id ||
@@ -1836,11 +1894,12 @@ class ExamStore {
       toDelete.push(`stuid:${target.studentId.trim().toLowerCase()}`);
     }
     this.markDeleted(toDelete);
+    const now = this.nextTimestamp();
     this.state.students = this.state.students.filter((s) => s.id !== id);
     this.state.exams = this.state.exams.map((ex) => ({
       ...ex,
       assignedStudentIds: ex.assignedStudentIds.filter((sid) => sid !== id),
-      updatedAtMs: Date.now(),
+      updatedAtMs: now,
     }));
     if (target) {
       this.logActivity(
@@ -1855,6 +1914,7 @@ class ExamStore {
   // EXAMINATION MANAGEMENT & TIMED AUTO-PUBLISH
   // =========================================================
   public addExam(data: Omit<Exam, 'id'>): Exam {
+    const now = this.nextTimestamp();
     const normalizedCohorts = normalizeAndDedupeSections(data.assignedCohorts);
     const sectionStudentIds = this.state.students
       .filter((s) => normalizedCohorts.includes(s.section))
@@ -1865,10 +1925,10 @@ class ExamStore {
 
     const newExam: Exam = {
       ...data,
-      id: `exam-${Date.now()}`,
+      id: `exam-${now}`,
       assignedCohorts: normalizedCohorts,
       assignedStudentIds: mergedStudentIds,
-      updatedAtMs: Date.now(),
+      updatedAtMs: now,
     };
     this.unmarkDeleted([newExam.id]);
     this.state.exams = [newExam, ...this.state.exams];
@@ -1878,7 +1938,7 @@ class ExamStore {
   }
 
   public updateExam(id: string, updates: Partial<Exam>) {
-    const now = Date.now();
+    const now = this.nextTimestamp();
     let updatedTitle: string | undefined;
     let updatedSubjectName: string | undefined;
 
@@ -1958,6 +2018,7 @@ class ExamStore {
   }
 
   public assignStudentsToExam(examId: string, studentIds: string[], cohorts: string[]) {
+    const now = this.nextTimestamp();
     const normalizedCohorts = normalizeAndDedupeSections(cohorts);
     const dedupedStudents = Array.from(new Set(studentIds));
     this.state.exams = this.state.exams.map((e) =>
@@ -1966,7 +2027,7 @@ class ExamStore {
             ...e,
             assignedStudentIds: dedupedStudents,
             assignedCohorts: normalizedCohorts,
-            updatedAtMs: Date.now(),
+            updatedAtMs: now,
           }
         : e
     );
@@ -1975,17 +2036,18 @@ class ExamStore {
   }
 
   public checkTimedAutoPublish() {
-    const now = Date.now();
+    const realNow = Date.now();
     let changed = false;
+    const nextTs = this.nextTimestamp();
     this.state.exams = this.state.exams.map((exam) => {
       if (
         exam.autoPublishAt &&
         exam.status !== 'Results Published' &&
-        new Date(exam.autoPublishAt).getTime() <= now
+        new Date(exam.autoPublishAt).getTime() <= realNow
       ) {
         changed = true;
         this.publishExamResultsInternal(exam.id);
-        return { ...exam, status: 'Results Published', updatedAtMs: now };
+        return { ...exam, status: 'Results Published', updatedAtMs: nextTs };
       }
       return exam;
     });
@@ -1998,10 +2060,11 @@ class ExamStore {
   // QUESTION BANK MANAGEMENT
   // =========================================================
   public addQuestion(data: Omit<Question, 'id'>): Question {
+    const now = this.nextTimestamp();
     const q: Question = {
       ...data,
-      id: `q-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
-      updatedAtMs: Date.now(),
+      id: `q-${now}-${Math.random().toString(36).slice(2, 5)}`,
+      updatedAtMs: now,
     };
     this.unmarkDeleted([q.id]);
     this.state.questions = [...this.state.questions, q];
@@ -2020,36 +2083,39 @@ class ExamStore {
     const targetExam = this.state.exams.find((e) => e.id === examId);
     if (!targetExam || items.length === 0) return [];
 
-    const now = Date.now();
+    const now = this.nextTimestamp();
     const created: Question[] = items.map((item, idx) => ({
       ...item,
       id: `q-${now}-${idx}-${Math.random().toString(36).slice(2, 5)}`,
       examId: targetExam.id,
       subjectId: targetExam.subjectId,
-      updatedAtMs: now,
+      updatedAtMs: now + idx,
     }));
 
     this.unmarkDeleted(created.map((q) => q.id));
     this.state.questions = [...this.state.questions, ...created];
     this.recalculateExamTotalMarks(targetExam.id);
 
-    if (publishExam) {
-      this.state.exams = this.state.exams.map((e) =>
-        e.id === targetExam.id
-          ? {
-              ...e,
-              status: e.status === 'Draft' ? 'Published' : e.status,
-              updatedAtMs: now,
-            }
-          : e
-      );
-    }
+    const examTs = this.nextTimestamp();
+    this.state.exams = this.state.exams.map((e) =>
+      e.id === targetExam.id
+        ? {
+            ...e,
+            status: publishExam
+              ? e.status === 'Results Published'
+                ? 'Results Published'
+                : 'Published'
+              : 'Draft',
+            updatedAtMs: examTs,
+          }
+        : e
+    );
 
     this.logActivity(
       'question',
-      `Imported ${created.length} question(s) into "${targetExam.title}"${
-        publishExam ? ' and published examination' : ''
-      }`
+      `Imported ${created.length} question(s) into "${targetExam.title}" (${
+        publishExam ? 'Published to Students' : 'Saved as Draft — Hidden from Students'
+      })`
     );
     this.notify();
     return created;
@@ -2057,7 +2123,7 @@ class ExamStore {
 
   public updateQuestion(id: string, updates: Partial<Question>) {
     let targetExamId = '';
-    const now = Date.now();
+    const now = this.nextTimestamp();
     this.state.questions = this.state.questions.map((q) => {
       if (q.id === id) {
         targetExamId = q.examId;
@@ -2084,17 +2150,19 @@ class ExamStore {
   private recalculateExamTotalMarks(examId: string) {
     const examQuestions = this.state.questions.filter((q) => q.examId === examId);
     if (examQuestions.length > 0) {
-      const now = Date.now();
+      const now = this.nextTimestamp();
       const sum = examQuestions.reduce((acc, q) => acc + q.marks, 0);
       const allStuIds = this.state.students.map((s) => s.id);
       this.state.exams = this.state.exams.map((e) =>
         e.id === examId
           ? {
               ...e,
-              status: e.status === 'Draft' ? 'Published' : e.status,
               totalMarks: sum,
               passingMarks: Math.min(e.passingMarks, sum) || Math.ceil(sum * 0.5),
-              assignedCohorts: [...ALL_SECTIONS],
+              assignedCohorts:
+                e.assignedCohorts && e.assignedCohorts.length > 0
+                  ? normalizeAndDedupeSections(e.assignedCohorts)
+                  : [...ALL_SECTIONS],
               assignedStudentIds: Array.from(
                 new Set([...(e.assignedStudentIds || []), ...allStuIds])
               ),
@@ -2173,7 +2241,7 @@ class ExamStore {
           answers: nextAnswers,
           maxScore,
           startedAt: isTimerExpired ? new Date().toISOString() : existing.startedAt,
-          updatedAtMs: Date.now(),
+          updatedAtMs: this.nextTimestamp(),
         };
         this.state.attempts = this.state.attempts.map((a) =>
           a.id === existing.id ? refreshed : a
@@ -2200,8 +2268,9 @@ class ExamStore {
       }
     }
 
+    const now = this.nextTimestamp();
     const attempt: ExamAttempt = {
-      id: `att-${Date.now()}`,
+      id: `att-${now}`,
       examId,
       examTitle: exam?.title || 'Examination',
       subjectName: exam?.subjectName || 'General',
@@ -2222,7 +2291,7 @@ class ExamStore {
       percentage: 0,
       passed: false,
       violationCount: 0,
-      updatedAtMs: Date.now(),
+      updatedAtMs: now,
     };
 
     this.state.attempts = [attempt, ...this.state.attempts];
@@ -2243,7 +2312,7 @@ class ExamStore {
     questionId: string,
     patch: Partial<StudentAnswer>
   ) {
-    const now = Date.now();
+    const now = this.nextTimestamp();
     this.state.attempts = this.state.attempts.map((att) => {
       if (att.id !== attemptId) return att;
       const existing = att.answers[questionId] || {
@@ -2268,7 +2337,7 @@ class ExamStore {
   }
 
   public toggleMarkForReview(attemptId: string, questionId: string) {
-    const now = Date.now();
+    const now = this.nextTimestamp();
     this.state.attempts = this.state.attempts.map((att) => {
       if (att.id !== attemptId) return att;
       const exists = att.markedForReview.includes(questionId);
@@ -2288,7 +2357,7 @@ class ExamStore {
     const att = this.state.attempts.find((a) => a.id === attemptId);
     if (!att) return null;
 
-    const now = Date.now();
+    const now = this.nextTimestamp();
     const event: ViolationEvent = {
       id: `viol-${now}-${Math.random().toString(36).slice(2, 5)}`,
       attemptId: att.id,
@@ -2396,7 +2465,7 @@ class ExamStore {
       maxScore,
       percentage,
       passed,
-      updatedAtMs: Date.now(),
+      updatedAtMs: this.nextTimestamp(),
     };
 
     this.state.attempts = this.state.attempts.map((a) =>
@@ -2460,7 +2529,7 @@ class ExamStore {
     const passed = totalScore >= passingMarks;
 
     let updatedAttempt: ExamAttempt | undefined;
-    const now = Date.now();
+    const now = this.nextTimestamp();
     this.state.attempts = this.state.attempts.map((a) => {
       if (a.id !== attemptId) return a;
       updatedAttempt = {
@@ -2488,7 +2557,7 @@ class ExamStore {
 
   public publishAttemptResult(attemptId: string, overallFeedback?: string) {
     let targetAttempt: ExamAttempt | undefined;
-    const now = Date.now();
+    const now = this.nextTimestamp();
     this.state.attempts = this.state.attempts.map((a) => {
       if (a.id !== attemptId) return a;
       targetAttempt = {
@@ -2514,9 +2583,10 @@ class ExamStore {
   }
 
   public publishAllExamResults(examId: string) {
+    const now = this.nextTimestamp();
     this.publishExamResultsInternal(examId);
     this.state.exams = this.state.exams.map((e) =>
-      e.id === examId ? { ...e, status: 'Results Published' } : e
+      e.id === examId ? { ...e, status: 'Results Published', updatedAtMs: now } : e
     );
     const exam = this.state.exams.find((e) => e.id === examId);
     this.logActivity(
@@ -2527,12 +2597,14 @@ class ExamStore {
   }
 
   private publishExamResultsInternal(examId: string) {
+    const now = this.nextTimestamp();
     this.state.attempts = this.state.attempts.map((a) => {
       if (a.examId === examId && a.status !== 'in-progress') {
         const updated: ExamAttempt = {
           ...a,
           status: 'published',
           publishedAt: new Date().toISOString(),
+          updatedAtMs: now,
         };
         if (updated.passed) {
           this.ensureCertificateIssued(updated, true);
@@ -2547,6 +2619,7 @@ class ExamStore {
     attempt: ExamAttempt,
     publishImmediately: boolean = true
   ): CertificateRecord {
+    const now = this.nextTimestamp();
     const grade =
       attempt.percentage >= 90
         ? 'A+ (Distinction)'
@@ -2569,6 +2642,7 @@ class ExamStore {
         percentage: attempt.percentage,
         grade: existing.grade || grade,
         publishedToStudent: publishImmediately ? true : existing.publishedToStudent,
+        updatedAtMs: now,
       };
       this.state.certificates = this.state.certificates.map((c) =>
         c.id === existing.id ? synced : c
@@ -2577,7 +2651,7 @@ class ExamStore {
     }
 
     const cert: CertificateRecord = {
-      id: `cert-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+      id: `cert-${now}-${Math.random().toString(36).slice(2, 5)}`,
       certificateNumber: `EF-2026-${attempt.subjectName.slice(0, 3).toUpperCase()}-${String(
         this.state.certificates.length + 1
       ).padStart(3, '0')}`,
@@ -2595,6 +2669,7 @@ class ExamStore {
       issuedAt: new Date().toISOString().split('T')[0],
       publishedToStudent: publishImmediately,
       customRemarks: 'Awarded for passing the proctored examination with verified distinction.',
+      updatedAtMs: now,
     };
 
     this.state.certificates = [cert, ...this.state.certificates];
@@ -2606,7 +2681,7 @@ class ExamStore {
       ...this.state.certificateTemplate,
       ...patch,
     };
-    this.state.templateUpdatedAt = Date.now();
+    this.state.templateUpdatedAt = this.nextTimestamp();
     this.notify();
   }
 
@@ -2614,15 +2689,16 @@ class ExamStore {
     certId: string,
     patch: Partial<CertificateRecord>
   ) {
+    const now = this.nextTimestamp();
     this.state.certificates = this.state.certificates.map((c) =>
-      c.id === certId ? { ...c, ...patch, updatedAtMs: Date.now() } : c
+      c.id === certId ? { ...c, ...patch, updatedAtMs: now } : c
     );
     this.notify();
   }
 
   public publishCertificateToStudent(certId: string) {
     let targetCert: CertificateRecord | undefined;
-    const now = Date.now();
+    const now = this.nextTimestamp();
     this.state.certificates = this.state.certificates.map((c) => {
       if (c.id !== certId) return c;
       targetCert = { ...c, publishedToStudent: true, updatedAtMs: now };
@@ -2674,7 +2750,7 @@ class ExamStore {
           bio: patch.bio,
         };
 
-    const now = Date.now();
+    const now = this.nextTimestamp();
     this.state.students = this.state.students.map((s) =>
       s.id === studentId ? { ...s, ...safePatch, updatedAtMs: now } : s
     );

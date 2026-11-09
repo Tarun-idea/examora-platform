@@ -643,3 +643,67 @@ test('questionPaperParser analyzes Input/Output formats, synthesizes test cases,
   }
 });
 
+test('mergeSharedPlatformState preserves Draft status on exams with questions and strips purged legacy IDs', async () => {
+  const { mergeSharedPlatformState } = await import('../services/examStore.ts');
+  const merged = mergeSharedPlatformState(
+    {
+      exams: [
+        {
+          id: 'exam-draft-1',
+          title: 'Technical skill - 1',
+          subjectId: 'sub-1',
+          subjectName: 'C Programming',
+          description: 'Draft exam hidden from students',
+          scheduledDate: '2026-11-10',
+          startTime: '10:00',
+          durationMinutes: 90,
+          totalMarks: 20,
+          passingMarks: 10,
+          instructions: 'Instructions',
+          status: 'Draft',
+          assignedStudentIds: [],
+          assignedCohorts: ['A', 'L'],
+          webcamProctoring: true,
+          updatedAtMs: 1794085000000,
+        },
+      ],
+      questions: [
+        {
+          id: 'q-valid-1',
+          examId: 'exam-draft-1',
+          subjectId: 'sub-1',
+          type: 'mcq',
+          text: 'Valid question for draft exam',
+          marks: 20,
+          difficulty: 'Medium',
+          options: [
+            { id: 'opt-a', label: 'A', text: '1' },
+            { id: 'opt-b', label: 'B', text: '2' },
+            { id: 'opt-c', label: 'C', text: '3' },
+            { id: 'opt-d', label: 'D', text: '4' },
+          ],
+          correctOptionId: 'opt-a',
+          updatedAtMs: 1794085000000,
+        },
+        {
+          id: 'q-1793854326823-a32',
+          examId: 'exam-draft-1',
+          subjectId: 'sub-1',
+          type: 'programming',
+          text: 'Legacy broken question',
+          marks: 15,
+          difficulty: 'Hard',
+          updatedAtMs: 1794085000000,
+        },
+      ],
+    },
+    {}
+  );
+
+  const draftExam = merged.exams.find((e) => e.id === 'exam-draft-1');
+  assert.ok(draftExam);
+  assert.equal(draftExam.status, 'Draft');
+  assert.equal(merged.questions.some((q) => q.id === 'q-1793854326823-a32'), false);
+  assert.equal(merged.questions.some((q) => q.id === 'q-valid-1'), true);
+});
+

@@ -118,37 +118,51 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     currentUser.bio || studentRecord?.bio || ''
   );
 
-  // Exams assigned to this student or their section (excluding Draft exams)
+  // Helper: strictly hide any Draft examination from Student Login
+  const isDraftExam = (status?: string) =>
+    String(status || '').trim().toLowerCase() === 'draft';
+
+  const visibleStudentExams = state.exams.filter(
+    (e) => !isDraftExam(e.status)
+  );
+  const visibleExamIds = new Set(visibleStudentExams.map((e) => e.id));
+
+  // Exams assigned to this student or their section (strictly excluding Draft exams)
   const effectiveSection = normalizeSection(
     currentUser.section || studentRecord?.section || 'A'
   );
-  const rawAssignedExams = state.exams.filter(
+  const rawAssignedExams = visibleStudentExams.filter(
     (e) =>
-      e.status !== 'Draft' &&
-      (e.assignedStudentIds.includes(currentUser.id) ||
-        (studentRecord && e.assignedStudentIds.includes(studentRecord.id)) ||
-        e.assignedCohorts.map(normalizeSection).includes(effectiveSection))
+      e.assignedStudentIds.includes(currentUser.id) ||
+      (studentRecord && e.assignedStudentIds.includes(studentRecord.id)) ||
+      e.assignedCohorts.map(normalizeSection).includes(effectiveSection)
   );
   const assignedExams =
-    rawAssignedExams.length > 0
-      ? rawAssignedExams
-      : state.exams.filter((e) => e.status !== 'Draft');
+    rawAssignedExams.length > 0 ? rawAssignedExams : visibleStudentExams;
 
-  const myAttempts = state.attempts.filter(
-    (a) =>
+  const myAttempts = state.attempts.filter((a) => {
+    const belongsToStudent =
       a.studentId === currentUser.id ||
       (currentUser.studentId &&
-        a.studentRegId?.toLowerCase() === currentUser.studentId.toLowerCase())
-  );
+        a.studentRegId?.toLowerCase() === currentUser.studentId.toLowerCase());
+    if (!belongsToStudent) return false;
+    const parentExam = state.exams.find((e) => e.id === a.examId);
+    if (parentExam && isDraftExam(parentExam.status)) return false;
+    return visibleExamIds.has(a.examId) || !parentExam;
+  });
   const publishedAttempts = myAttempts.filter((a) => a.status === 'published');
 
-  // Ensure every passed attempt has a certificate available for this student
-  const myCertificates = state.certificates.filter(
-    (c) =>
+  // Ensure every passed attempt has a certificate available for this student (excluding Draft exams)
+  const myCertificates = state.certificates.filter((c) => {
+    const belongsToStudent =
       c.studentId === currentUser.id ||
       (currentUser.studentId &&
-        c.studentRegId?.toLowerCase() === currentUser.studentId.toLowerCase())
-  );
+        c.studentRegId?.toLowerCase() === currentUser.studentId.toLowerCase());
+    if (!belongsToStudent) return false;
+    const parentExam = state.exams.find((e) => e.id === c.examId);
+    if (parentExam && isDraftExam(parentExam.status)) return false;
+    return true;
+  });
 
   const upcomingExams = assignedExams.filter(
     (e) =>

@@ -428,7 +428,7 @@ export const QuestionPaperImportModal: React.FC<
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <label
               htmlFor="import-target-exam"
               className="text-xs font-bold text-slate-600 whitespace-nowrap"
@@ -443,10 +443,26 @@ export const QuestionPaperImportModal: React.FC<
             >
               {state.exams.map((ex) => (
                 <option key={ex.id} value={ex.id}>
-                  {ex.title} ({ex.status})
+                  {ex.title} —{' '}
+                  {ex.status === 'Draft'
+                    ? 'Draft (Hidden from Students)'
+                    : `${ex.status} (Visible to Students)`}
                 </option>
               ))}
             </select>
+            {targetExam && (
+              <span
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
+                  targetExam.status === 'Draft'
+                    ? 'bg-amber-50 border-amber-300 text-amber-800'
+                    : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                }`}
+              >
+                {targetExam.status === 'Draft'
+                  ? 'Draft · Hidden from Student Login'
+                  : 'Published · Live in Student Login'}
+              </span>
+            )}
           </div>
         </div>
 
@@ -1434,20 +1450,22 @@ export const QuestionPaperImportModal: React.FC<
               <>
                 <button
                   type="button"
-                  onClick={() => handleCommitImport(true, false)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm cursor-pointer"
+                  onClick={() => handleCommitImport(false, false)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-xs font-bold shadow-sm cursor-pointer"
+                  title="Save questions and keep this exam in Draft mode (hidden from Student login)"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  Save {drafts.length} Questions to Bank
+                  <CheckCircle2 className="w-4 h-4 text-amber-400" />
+                  Save {drafts.length} Qs as Draft (Hidden from Students)
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleCommitImport(true, true)}
                   className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-md shadow-emerald-600/25 cursor-pointer"
+                  title="Save questions and publish exam immediately so students can view and take it"
                 >
                   <Send className="w-4 h-4" />
-                  Save &amp; Publish Exam + Preview
+                  Save &amp; Publish Exam (Live for Students)
                 </button>
               </>
             )}

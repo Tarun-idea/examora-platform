@@ -461,13 +461,28 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({ initialExamId }) => 
             {state.exams.map((ex) => (
               <option key={ex.id} value={ex.id}>
                 {ex.title} (
-                {state.questions.filter((q) => q.examId === ex.id).length} items)
+                {state.questions.filter((q) => q.examId === ex.id).length} items) —{' '}
+                {ex.status === 'Draft'
+                  ? 'Draft (Hidden from Students)'
+                  : `${ex.status} (Visible to Students)`}
               </option>
             ))}
           </select>
 
           {activePreviewExam && (
             <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
+                  activePreviewExam.status === 'Draft'
+                    ? 'bg-amber-50 border-amber-300 text-amber-800'
+                    : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                }`}
+              >
+                {activePreviewExam.status === 'Draft'
+                  ? 'Draft · Hidden from Student Login'
+                  : 'Published · Live in Student Login'}
+              </span>
+
               <button
                 type="button"
                 onClick={() => setPreviewPaperMode('paper')}
@@ -484,7 +499,7 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({ initialExamId }) => 
                 <Monitor className="w-3.5 h-3.5 text-purple-600" />
                 What Displays After Publish
               </button>
-              {activePreviewExam.status === 'Draft' && (
+              {activePreviewExam.status === 'Draft' ? (
                 <button
                   type="button"
                   onClick={() => {
@@ -493,13 +508,29 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({ initialExamId }) => 
                     });
                     setStatusBanner({
                       type: 'success',
-                      text: `Published "${activePreviewExam.title}"! Click "What Displays After Publish" to inspect the live student view.`,
+                      text: `Published "${activePreviewExam.title}"! It is now visible in Student Login.`,
                     });
                   }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  Publish Exam
+                  Publish Exam to Students
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    examStore.updateExam(activePreviewExam.id, {
+                      status: 'Draft',
+                    });
+                    setStatusBanner({
+                      type: 'success',
+                      text: `Moved "${activePreviewExam.title}" to Draft mode — it is now hidden from Student Login.`,
+                    });
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold cursor-pointer"
+                >
+                  Set as Draft (Hide from Students)
                 </button>
               )}
             </div>
@@ -1214,8 +1245,8 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({ initialExamId }) => 
                 ex?.title || 'Examination'
               }"${
                 published
-                  ? ' and published the examination live for students!'
-                  : '.'
+                  ? ' and published the examination live for Student Login!'
+                  : ' as a Draft (hidden from Student Login until published).'
               }`,
             });
             if (openPreviewAfter) {

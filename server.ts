@@ -76,6 +76,19 @@ function isCorruptedMojibakeText(text?: string): boolean {
   return badCount / trimmed.length > 0.12;
 }
 
+const LEGACY_PURGED_QUESTION_IDS = new Set([
+  'q-1793854326823-a32',
+  'q-1793854397160-tms',
+  'q-1793854455536-6bj',
+  'q-1793861915239-f4y',
+  'q-1793856022167-ruw',
+  'q-1793860253544-gue',
+  'q-1793854611447-2l5',
+  'q-1793861853240-iur',
+  'q-1793854501466-mtu',
+  'q-1793860336057-zmg',
+]);
+
 function sanitizeServerStateCollections(stateObj: Record<string, any>): Record<string, any> {
   if (!stateObj || typeof stateObj !== 'object') return stateObj;
   if (Array.isArray(stateObj.students)) {
@@ -93,7 +106,11 @@ function sanitizeServerStateCollections(stateObj: Record<string, any>): Record<s
   if (Array.isArray(stateObj.questions)) {
     stateObj.questions = stateObj.questions
       .filter(
-        (q: any) => q && typeof q === 'object' && !isCorruptedMojibakeText(q.text)
+        (q: any) =>
+          q &&
+          typeof q === 'object' &&
+          !LEGACY_PURGED_QUESTION_IDS.has(String(q.id || '')) &&
+          !isCorruptedMojibakeText(q.text)
       )
       .map((q: any) => {
         if (q.type === 'programming' && typeof q.starterCode === 'string') {
@@ -140,16 +157,10 @@ function sanitizeServerStateCollections(stateObj: Record<string, any>): Record<s
 
     stateObj.exams = stateObj.exams.map((ex: any) => {
       const qMarks = qByExam.get(ex.id) || 0;
-      const shouldPublish =
-        ex.status === 'Draft' &&
-        (qMarks > 0 || ex.id === 'exam-1793806189274');
-      const cohorts =
-        ex.id === 'exam-1793806189274'
-          ? [...VALID_SECTIONS]
-          : normalizeAndDedupeServerSections(ex.assignedCohorts);
+      const cohorts = normalizeAndDedupeServerSections(ex.assignedCohorts);
       return {
         ...ex,
-        status: shouldPublish ? 'Published' : ex.status,
+        status: ex.status || 'Published',
         totalMarks: qMarks > 0 ? qMarks : ex.totalMarks,
         assignedCohorts: cohorts,
         assignedStudentIds: Array.from(
@@ -202,7 +213,8 @@ function mergeArrayById(
   incomingArr: any[] = [],
   deletedSet: Set<string>,
   isStudentArray = false,
-  isAttemptArray = false
+  isAttemptArray = false,
+  preferIncoming = false
 ): any[] {
   const map = new Map<string, any>();
   const stuIdToKey = new Map<string, string>();
@@ -214,10 +226,10 @@ function mergeArrayById(
     published: 4,
   };
 
-  const processItem = (item: any) => {
+  const processItem = (item: any, fromIncoming: boolean) => {
     if (!item || typeof item !== 'object') return;
     const id = String(item.id || '');
-    if (!id || deletedSet.has(id)) return;
+    if (!id || deletedSet.has(id) || LEGACY_PURGED_QUESTION_IDS.has(id)) return;
 
     const normStuId =
       isStudentArray && item.studentId
@@ -272,7 +284,7 @@ function mergeArrayById(
 
     const prevTime = Number(prev.updatedAtMs || 0);
     const nextTime = Number(item.updatedAtMs || 0);
-    if (nextTime >= prevTime) {
+    if ((fromIncoming && preferIncoming) || nextTime >= prevTime) {
       if (idMatch && idMatch !== id) map.delete(idMatch);
       if (stuMatch && stuMatch !== id) map.delete(stuMatch);
       if (isStudentArray) {
@@ -299,8 +311,8 @@ function mergeArrayById(
     }
   };
 
-  for (const item of existingArr) processItem(item);
-  for (const item of incomingArr) processItem(item);
+  for (const item of existingArr) processItem(item, false);
+  for (const item of incomingArr) processItem(item, true);
 
   const uniqueOut: any[] = [];
   const seenIds = new Set<string>();
@@ -339,12 +351,10 @@ function mergeServerStates(
     return current;
   }
 
-  // Only allow incoming payload to mutate Admin-owned collections if the request is from Admin
-  // (or if incoming explicitly carries a newer adminUpdatedAt from an Admin action)
+  // Allow incoming payload to mutate Admin-owned collections whenever the request is from Admin
   const currentAdminTime = Number(current.adminUpdatedAt || 0);
   const incomingAdminTime = Number(incoming.adminUpdatedAt || 0);
-  const canMutateAdminData =
-    role === 'admin' && (incomingAdminTime >= currentAdminTime || currentAdminTime === 0);
+  const canMutateAdminData = role === 'admin';
 
   const mergedDeletedTimestamps: Record<string, number> = {};
   for (const [k, v] of Object.entries(current.deletedTimestamps || {})) {
@@ -368,6 +378,7 @@ function mergeServerStates(
       ...(canMutateAdminData && Array.isArray(incoming.deletedIds)
         ? incoming.deletedIds
         : []),
+      ...Array.from(LEGACY_PURGED_QUESTION_IDS),
     ])
   );
   const deletedSet = new Set<string>(deletedIds);
@@ -379,6 +390,7 @@ function mergeServerStates(
       const itemTime = Number(item.updatedAtMs || 0);
       if (!itemTime) continue;
       const id = String(item.id || '');
+      if (LEGACY_PURGED_QUESTION_IDS.has(id)) continue;
       const delTime = mergedDeletedTimestamps[id] || 0;
       if (id && delTime > 0 && itemTime > delTime) {
         deletedSet.delete(id);
@@ -397,12 +409,12 @@ function mergeServerStates(
     }
   };
 
-  unmarkIfNewer(current.students, true);
-  unmarkIfNewer(current.subjects);
-  unmarkIfNewer(current.exams);
-  unmarkIfNewer(current.questions);
-
-  if (canMutateAdminData) {
+  if (!canMutateAdminData) {
+    unmarkIfNewer(current.students, true);
+    unmarkIfNewer(current.subjects);
+    unmarkIfNewer(current.exams);
+    unmarkIfNewer(current.questions);
+  } else {
     unmarkIfNewer(incoming.students, true);
     unmarkIfNewer(incoming.subjects);
     unmarkIfNewer(incoming.exams);
@@ -410,19 +422,19 @@ function mergeServerStates(
   }
 
   const students = canMutateAdminData
-    ? mergeArrayById(current.students, incoming.students, deletedSet, true, false)
+    ? mergeArrayById(current.students, incoming.students, deletedSet, true, false, true)
     : mergeArrayById(current.students, [], deletedSet, true, false);
 
   const subjects = canMutateAdminData
-    ? mergeArrayById(current.subjects, incoming.subjects, deletedSet)
+    ? mergeArrayById(current.subjects, incoming.subjects, deletedSet, false, false, true)
     : mergeArrayById(current.subjects, [], deletedSet);
 
   const exams = canMutateAdminData
-    ? mergeArrayById(current.exams, incoming.exams, deletedSet)
+    ? mergeArrayById(current.exams, incoming.exams, deletedSet, false, false, true)
     : mergeArrayById(current.exams, [], deletedSet);
 
   const questions = canMutateAdminData
-    ? mergeArrayById(current.questions, incoming.questions, deletedSet)
+    ? mergeArrayById(current.questions, incoming.questions, deletedSet, false, false, true)
     : mergeArrayById(current.questions, [], deletedSet);
 
   const attempts = mergeArrayById(
@@ -452,25 +464,23 @@ function mergeServerStates(
   const incomingSettingsTime = canMutateAdminData
     ? Number(incoming.settingsUpdatedAt || 0)
     : 0;
-  const settings =
-    canMutateAdminData && incomingSettingsTime >= currentSettingsTime
-      ? { ...(current.settings || {}), ...(incoming.settings || {}) }
-      : { ...(incoming.settings || {}), ...(current.settings || {}) };
+  const settings = canMutateAdminData
+    ? { ...(current.settings || {}), ...(incoming.settings || {}) }
+    : { ...(incoming.settings || {}), ...(current.settings || {}) };
 
   const currentTemplateTime = Number(current.templateUpdatedAt || 0);
   const incomingTemplateTime = canMutateAdminData
     ? Number(incoming.templateUpdatedAt || 0)
     : 0;
-  const certificateTemplate =
-    canMutateAdminData && incomingTemplateTime >= currentTemplateTime
-      ? {
-          ...(current.certificateTemplate || {}),
-          ...(incoming.certificateTemplate || {}),
-        }
-      : {
-          ...(incoming.certificateTemplate || {}),
-          ...(current.certificateTemplate || {}),
-        };
+  const certificateTemplate = canMutateAdminData
+    ? {
+        ...(current.certificateTemplate || {}),
+        ...(incoming.certificateTemplate || {}),
+      }
+    : {
+        ...(incoming.certificateTemplate || {}),
+        ...(current.certificateTemplate || {}),
+      };
 
   return {
     subjects,

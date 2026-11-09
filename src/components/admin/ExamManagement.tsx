@@ -601,8 +601,20 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
                         </h2>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        {exam.status === 'Draft' && (
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        <span
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
+                            exam.status === 'Draft'
+                              ? 'bg-amber-50 border-amber-300 text-amber-800'
+                              : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                          }`}
+                        >
+                          {exam.status === 'Draft'
+                            ? 'Draft · Hidden from Students'
+                            : 'Live · Visible to Students'}
+                        </span>
+
+                        {exam.status === 'Draft' ? (
                           <button
                             type="button"
                             onClick={() => {
@@ -610,16 +622,33 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
                                 status: 'Published',
                               });
                               showBannerMessage(
-                                `Published "${exam.title}" — now visible to assigned students.`
+                                `Published "${exam.title}" — now visible in Student Login.`
                               );
                             }}
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer"
-                            title="Publish immediately so students can take this examination"
+                            title="Publish immediately so students can view and take this examination"
                           >
                             <Sparkles className="w-3.5 h-3.5" />
-                            Publish
+                            Publish to Students
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              examStore.updateExam(exam.id, {
+                                status: 'Draft',
+                              });
+                              showBannerMessage(
+                                `Moved "${exam.title}" to Draft — now hidden from Student Login.`
+                              );
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                            title="Move to Draft mode to hide this examination from Student Login"
+                          >
+                            Set as Draft (Hide)
                           </button>
                         )}
+
                         <select
                           aria-label={`Status for ${exam.title}`}
                           value={exam.status}
@@ -629,15 +658,19 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
                               status: nextStatus,
                             });
                             showBannerMessage(
-                              `Updated "${exam.title}" status to ${nextStatus}.`
+                              `Updated "${exam.title}" status to ${nextStatus} (${
+                                nextStatus === 'Draft'
+                                  ? 'Hidden from Student Login'
+                                  : 'Visible to Students'
+                              }).`
                             );
                           }}
                           className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none cursor-pointer"
                         >
-                          <option value="Draft">Draft</option>
-                          <option value="Scheduled">Scheduled</option>
-                          <option value="Published">Published</option>
-                          <option value="Ongoing">Ongoing</option>
+                          <option value="Draft">Draft (Hidden from Students)</option>
+                          <option value="Scheduled">Scheduled (Visible)</option>
+                          <option value="Published">Published (Live for Students)</option>
+                          <option value="Ongoing">Ongoing (Live)</option>
                           <option value="Completed">Completed</option>
                           <option value="Results Published">Results Published</option>
                         </select>

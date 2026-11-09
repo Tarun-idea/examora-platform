@@ -111,7 +111,14 @@ export function App() {
   // =========================================================
   // PROCTORED EXAM ENVIRONMENT (FULL-SCREEN LOCK FOR STUDENT)
   // =========================================================
-  if (!isAdmin && activeExamSessionId) {
+  const activeSessionExam = activeExamSessionId
+    ? storeState.exams.find((e) => e.id === activeExamSessionId)
+    : undefined;
+  const isSessionExamDraft =
+    activeSessionExam &&
+    String(activeSessionExam.status || '').trim().toLowerCase() === 'draft';
+
+  if (!isAdmin && activeExamSessionId && !isSessionExamDraft) {
     return (
       <ExamEnvironment
         examId={activeExamSessionId}
@@ -199,6 +206,15 @@ export function App() {
           activeTab={currentTab}
           onSelectTab={(tab) => setCurrentTab(tab)}
           onStartExam={(examId) => {
+            const targetExam = examStore
+              .getState()
+              .exams.find((e) => e.id === examId);
+            if (
+              !targetExam ||
+              String(targetExam.status || '').trim().toLowerCase() === 'draft'
+            ) {
+              return;
+            }
             examStore.startOrResumeAttempt(examId, currentUser.id, false);
             setActiveExamSessionId(examId);
           }}
